@@ -1,23 +1,28 @@
 FROM python:3.12.5-slim-bookworm
 
-# Set environment variables to non-interactive and unbuffered output
+# Set environment variables for non-interactive setup and unbuffered output
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
-    PYTHONIOENCODING=UTF-8
+    PYTHONIOENCODING=UTF-8 \
+    PYTHONPATH="/app"
 
-# Set the working directory inside the container
+# Build argument for setting the main app path
+ARG MAINAPPPATH=.
+
+# Set working directory inside the container
 WORKDIR /app
 
-# Copy only the requirements file(s) to leverage Docker cache
-# Assuming all requirements files are in the root or subdirectories
-COPY ./requirements.txt ./
+# Copy requirements to leverage Docker cache
+COPY ${MAINAPPPATH}/requirements.txt ${MAINAPPPATH}/requirements.txt
 
-# Install dependencies
-# Adding `--no-cache-dir` to avoid storing unnecessary files and potentially reduce image size
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dependencies without caching
+RUN pip install --no-cache-dir -r ${MAINAPPPATH}/requirements.txt
 
-# Copy the rest of the application
+# Copy entire application into container
 COPY . .
 
-# Set the command to run your application
+# Set working directory to main app path
+WORKDIR /app/${MAINAPPPATH}
+
+# Define the container's startup command
 ENTRYPOINT ["python3", "main.py"]
